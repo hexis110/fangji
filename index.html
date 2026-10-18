@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#2f5d62">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="方剂习题">
+<meta name="apple-mobile-web-app-title" content="方剂学习">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -159,6 +159,7 @@ function home(msg){
   var acc=seen?Math.round(right/seen*100)+'%':'—';
   var last=S.last!=null&&CH[S.last]?S.last:null;
   var h='';
+  h+='<nav style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:10px"><a href="cards.html" style="color:var(--dai);font-size:14px;text-decoration:none;border:1px solid var(--rule);border-radius:999px;padding:4px 12px;background:var(--sheet)">方剂记忆卡 →</a><a href="games.html" style="color:var(--dai);font-size:14px;text-decoration:none;border:1px solid var(--rule);border-radius:999px;padding:4px 12px;background:var(--sheet)">方剂游戏 →</a></nav>';
   h+='<header class="masthead"><div><div class="label">新加坡中医学院 · 十四五版</div><h1>方剂学习题本</h1><div class="sub">'+Q.length+' 道练习题 · 附答案与解析 · 可离线使用</div></div><span class="seal">温故知新</span></header>';
   h+='<div class="summary tnum"><div><span class="label">已做</span><b>'+seen+'</b><span class="label">/ '+Q.length+'</span></div><div><span class="label">正确率</span><b>'+acc+'</b></div><div><span class="label">错题本</span><b style="color:var(--zhu)">'+wb+'</b></div></div>';
   h+='<div class="actions">';

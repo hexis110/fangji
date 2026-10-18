@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f5d62">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="方剂学习">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+<title>方剂记忆卡</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one study column; home = today's queue + decks, review = one card that turns over like a paper slip */
+:root{
+  --paper:#f3f4ef;--sheet:#fbfcf8;--ink:#1f2a24;--muted:#5f6b63;--rule:#d9ddd3;
+  --dai:#2f5d62;--dai-soft:#e3ecea;--zhu:#b5402f;--zhu-soft:#f6e3df;--ai:#3f7a4a;--ai-soft:#e2efe2;--amber:#93650f;--amber-soft:#f5ecd8;
+  --serif:"Songti SC","STSong","Noto Serif SC","Noto Serif CJK SC","Source Han Serif SC","SimSun",serif;
+  --sans:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Noto Sans CJK SC","Microsoft YaHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#131815;--sheet:#1b221e;--ink:#e4e9e3;--muted:#9aa69e;--rule:#2f3a33;
+  --dai:#7fb6b9;--dai-soft:#213334;--zhu:#ec8a77;--zhu-soft:#3a2420;--ai:#8cc694;--ai-soft:#1f3323;--amber:#e0b660;--amber-soft:#352c19;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#131815;--sheet:#1b221e;--ink:#e4e9e3;--muted:#9aa69e;--rule:#2f3a33;
+  --dai:#7fb6b9;--dai-soft:#213334;--zhu:#ec8a77;--zhu-soft:#3a2420;--ai:#8cc694;--ai-soft:#1f3323;--amber:#e0b660;--amber-soft:#352c19;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--sans);font-size:16px;line-height:1.6;margin:0;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--dai);outline-offset:2px}
+h1,h2{font-family:var(--serif);font-weight:700;text-wrap:balance;margin:0}
+.label{font-size:12px;letter-spacing:.12em;color:var(--muted)}
+.tnum{font-variant-numeric:tabular-nums}
+.toplink{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
+.toplink a{color:var(--dai);font-size:14px;text-decoration:none;border:1px solid var(--rule);border-radius:999px;padding:4px 12px;background:var(--sheet)}
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:2px solid var(--ink)}
+.masthead h1{font-size:30px;letter-spacing:.06em}
+.masthead .sub{color:var(--muted);font-size:13px}
+.seal{font-family:var(--serif);color:var(--zhu);border:2px solid var(--zhu);border-radius:4px;padding:2px 6px;font-size:13px;letter-spacing:.1em;transform:rotate(-4deg)}
+.today{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-top:18px}
+.today div{background:var(--sheet);padding:12px 14px}
+.today b{display:block;font-family:var(--serif);font-size:26px;line-height:1.2}
+.go{display:block;width:100%;margin-top:12px;border:1px solid var(--dai);background:var(--dai);color:var(--sheet);border-radius:6px;padding:14px;font-size:17px}
+.go small{display:block;font-size:12px;opacity:.85}
+.go:disabled{opacity:.5;cursor:default}
+.sectionhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:28px;margin-bottom:10px}
+.sectionhead h2{font-size:19px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--rule);background:var(--sheet);border-radius:999px;padding:6px 12px;font-size:14px;display:flex;gap:6px;align-items:baseline}
+.chip small{color:var(--muted);font-size:12px}
+.chip[aria-pressed="true"]{background:var(--dai-soft);border-color:var(--dai);color:var(--dai)}
+.chip[aria-pressed="true"] small{color:var(--dai)}
+.linkbtn{border:0;background:none;color:var(--dai);font-size:13px;padding:2px 0;text-decoration:underline;text-underline-offset:3px}
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:16px}
+.panel p{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.setrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--rule)}
+.setrow:first-child{border-top:0;padding-top:0}
+.setrow .opts{display:flex;gap:6px;flex-wrap:wrap}
+.mast{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--rule);margin:8px 0 6px}
+.mast i{display:block;height:100%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:var(--c)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--rule);background:var(--sheet);border-radius:6px;padding:11px 10px;text-align:center;line-height:1.3;flex:1 1 140px}
+textarea{width:100%;min-height:80px;font:13px/1.4 ui-monospace,Menlo,monospace;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:4px;padding:8px;margin-top:10px;word-break:break-all}
+.msg{font-size:14px;margin-top:8px;color:var(--dai)}
+.search{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:6px;background:var(--sheet);color:var(--ink)}
+.flist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.fitem{background:var(--sheet);border:1px solid var(--rule);border-radius:5px;padding:10px 12px}
+.fitem summary{cursor:pointer;display:flex;justify-content:space-between;gap:8px;list-style:none}
+.fitem summary::-webkit-details-marker{display:none}
+.fitem summary b{font-family:var(--serif);font-size:17px}
+.fitem summary span{color:var(--muted);font-size:12px;white-space:nowrap}
+.foot{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.7}
+
+/* review */
+.rtop{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);display:flex;align-items:center;gap:10px;padding-block:10px;border-bottom:1px solid var(--rule)}
+.back{border:0;background:none;padding:6px 8px 6px 0;color:var(--dai);font-size:15px}
+.rtop .title{flex:1;min-width:0;font-family:var(--serif);font-weight:700}
+.counts{font-size:13px;display:flex;gap:10px}
+.counts .n{color:var(--dai)}.counts .l{color:var(--zhu)}.counts .r{color:var(--ai)}
+.slip{margin-top:18px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;min-height:min(52vh,440px);display:flex;flex-direction:column;position:relative;overflow:hidden}
+.slip::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--dai)}
+.slip.k-zc::before{background:var(--ai)}.slip.k-rf::before{background:var(--zhu)}
+.face{padding:22px 20px 20px 26px;display:flex;flex-direction:column;gap:14px;flex:1;min-width:0}
+.kind{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.prompt{font-family:var(--serif);font-size:30px;line-height:1.35;overflow-wrap:anywhere}
+.prompt.small{font-size:19px;line-height:1.7}
+.ask{color:var(--muted);font-size:15px}
+.answer{border-top:1px dashed var(--rule);padding-top:14px;display:flex;flex-direction:column;gap:12px}
+.field .label{display:block;margin-bottom:2px}
+.field .v{font-size:17px;overflow-wrap:anywhere}
+.field .v.big{font-family:var(--serif);font-size:20px;line-height:1.7}
+.herbs{display:flex;flex-wrap:wrap;gap:6px}
+.herbs span{background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:2px 8px;font-family:var(--serif);font-size:17px}
+.herbs span.jun{border-color:var(--zhu);color:var(--zhu)}
+.note{font-size:13px;color:var(--amber);background:var(--amber-soft);border-radius:4px;padding:6px 10px}
+.flip{display:block;width:100%;margin-top:14px;border:1px solid var(--dai);background:var(--dai);color:var(--sheet);border-radius:6px;padding:15px;font-size:17px}
+.grades{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.grade{border:1px solid var(--rule);background:var(--sheet);border-radius:6px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;line-height:1.25}
+.grade b{font-size:16px}
+.grade small{font-size:12px;color:var(--muted)}
+.grade.g1{border-color:var(--zhu);color:var(--zhu)}
+.grade.g3{border-color:var(--ai);color:var(--ai)}
+.done{text-align:center;padding:36px 16px}
+.done .big{font-family:var(--serif);font-size:44px;margin:8px 0}
+@media (max-width:420px){.prompt{font-size:26px}}
+@media (prefers-reduced-motion:no-preference){.answer{animation:rise .18s ease-out}@keyframes rise{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
+</style>
+
+</head><body><div class="wrap" id="app"></div>
+
+<script id="fdata" type="application/json">{"chapters":["解表剂","泻下剂","和解剂","清热剂","祛暑剂","温里剂","表里双解剂","补益剂","固涩剂","安神剂","开窍剂","理气剂","理血剂","治风剂","治燥剂","祛湿剂","祛痰剂","消食剂","驱虫剂","涌吐剂","治痈疡剂"],"f":[[0,"麻黄汤","伤寒论","麻黄、桂枝、杏仁、炙甘草","发汗解表，宣肺平喘","外感风寒表实证","麻黄"],[0,"大青龙汤","伤寒论","麻黄、桂枝、杏仁、炙甘草、石膏、生姜、大枣","发汗解表，兼清里热","外感风寒，内有郁热证","麻黄"],[0,"桂枝汤","伤寒论","桂枝、芍药、炙甘草、生姜、大枣","解肌发表，调和营卫","外感风寒表虚证","桂枝"],[0,"九味羌活汤","此事难知（录张元素方）","羌活、防风、苍术、细辛、川芎、白芷、生地黄、黄芩、甘草","发汗祛湿，兼清里热","外感风寒湿邪，内有蕴热证","羌活"],[0,"香苏散","太平惠民和剂局方","香附、紫苏叶、陈皮、炙甘草","疏散风寒，理气和中","外感风寒，气郁不舒证","紫苏叶"],[0,"小青龙汤","伤寒论","麻黄、芍药、细辛、干姜、炙甘草、桂枝、五味子、半夏","解表散寒，温肺化饮","外寒里饮证","麻黄、桂枝"],[0,"止嗽散","医学心悟","桔梗、荆芥、紫菀、百部、白前、陈皮、甘草","宣利肺气，疏风止咳","风邪犯肺之咳嗽证","紫菀、百部"],[0,"银翘散","温病条辨","连翘、金银花、桔梗、薄荷、竹叶、生甘草、荆芥穗、淡豆豉、牛蒡子（鲜芦根汤煎）","辛凉透表，清热解毒","温病初起","金银花、连翘"],[0,"桑菊饮","温病条辨","桑叶、菊花、杏仁、连翘、薄荷、桔梗、生甘草、芦根","疏风清热，宣肺止咳","风温初起，表热轻证","桑叶、菊花"],[0,"麻黄杏仁甘草石膏汤","伤寒论","麻黄、杏仁、炙甘草、石膏","辛凉疏表，清肺平喘","外感风邪，邪热壅肺证","麻黄、石膏"],[0,"柴葛解肌汤","伤寒六书","柴胡、葛根、甘草、黄芩、羌活、白芷、芍药、桔梗、石膏（加生姜、大枣）","解肌清热","外感风寒，郁而化热证","葛根、柴胡"],[0,"升麻葛根汤","太平惠民和剂局方","升麻、葛根、芍药、炙甘草","解肌透疹","麻疹初起","升麻、葛根"],[0,"败毒散","太平惠民和剂局方","柴胡、前胡、川芎、枳壳、羌活、独活、茯苓、桔梗、人参、甘草（加生姜、薄荷）","散寒祛湿，益气解表","气虚外感风寒湿表证","羌活、独活"],[0,"参苏饮","太平惠民和剂局方","人参、紫苏叶、葛根、半夏、前胡、茯苓、木香、枳壳、桔梗、陈皮、炙甘草（加生姜、大枣）","益气解表，理气化痰","气虚外感风寒，内有痰湿证","紫苏叶、葛根"],[0,"麻黄细辛附子汤","伤寒论","麻黄、附子、细辛","助阳解表","素体阳虚，外感风寒证","麻黄、附子"],[0,"再造散","伤寒六书","黄芪、人参、桂枝、甘草、熟附子、细辛、羌活、防风、川芎、煨生姜（加大枣、赤芍）","助阳益气，解表散寒","阳气虚弱，外感风寒证",""],[0,"加减葳蕤汤","重订通俗伤寒论","生葳蕤、生葱白、桔梗、东白薇、淡豆豉、苏薄荷、炙甘草、红枣","滋阴解表","素体阴虚，外感风热证","葳蕤"],[0,"葱白七味饮","外台秘要","葱白、葛根、新豉、生姜、麦冬、干地黄（劳水煎）","养血解表","血虚外感风寒证",""],[1,"大承气汤","伤寒论","大黄、厚朴、枳实、芒硝","峻下热结","①阳明腑实证 ②热结旁流证 ③里热实证之热厥、痉病或发狂","大黄"],[1,"大陷胸汤","伤寒论","大黄、芒硝、甘遂","泻热逐水","大结胸证",""],[1,"大黄附子汤","金匮要略","大黄、附子、细辛","温里散寒，通便止痛","寒积里实证","附子、大黄"],[1,"温脾汤","备急千金要方","大黄、当归、干姜、附子、人参、芒硝、甘草","攻下冷积，温补脾阳","阳虚寒积证",""],[1,"三物备急丸","金匮要略","大黄、巴豆、干姜","攻逐寒积","寒实冷积内停证","巴豆"],[1,"麻子仁丸","伤寒论","麻子仁、芍药、枳实、大黄、厚朴、杏仁（蜜丸）","润肠泄热，行气通便","脾约证",""],[1,"五仁丸","世医得效方","桃仁、杏仁、柏子仁、松子仁、郁李仁、陈皮","润肠通便","津枯肠燥证",""],[1,"济川煎","景岳全书","当归、牛膝、肉苁蓉、泽泻、升麻、枳壳","温肾益精，润肠通便","肾阳虚弱，精津不足之便秘","肉苁蓉"],[1,"十枣汤","伤寒论","芫花、甘遂、大戟（大枣十枚煎汤送服）","攻逐水饮","①悬饮 ②水肿（实水）",""],[1,"禹功散","儒门事亲","黑牵牛、茴香（或加木香）","逐水通便，行气消肿","阳水",""],[1,"黄龙汤","伤寒六书","大黄、芒硝、枳实、厚朴、当归、人参、甘草（加生姜、大枣、桔梗）","攻下通便，补气养血","阳明腑实，气血不足证",""],[1,"增液承气汤","温病条辨","玄参、麦冬、细生地、大黄、芒硝","滋阴增液，泄热通便","热结阴亏证",""],[2,"小柴胡汤","伤寒论","柴胡、黄芩、人参、炙甘草、半夏、生姜、大枣","和解少阳","①伤寒少阳证 ②热入血室证 ③黄疸、疟疾及内伤杂病见少阳证者","柴胡"],[2,"蒿芩清胆汤","重订通俗伤寒论","青蒿、淡竹茹、仙半夏、赤茯苓、青子芩、生枳壳、陈广皮、碧玉散","清胆利湿，和胃化痰","少阳湿热证","青蒿、黄芩"],[2,"达原饮","温疫论","槟榔、厚朴、草果仁、知母、芍药、黄芩、甘草","开达膜原，辟秽化浊","瘟疫或疟疾，邪伏膜原证","槟榔、厚朴、草果"],[2,"四逆散","伤寒论","柴胡、芍药、枳实、炙甘草","透邪解郁，疏肝理脾","①阳郁厥逆证 ②肝脾气郁证","柴胡"],[2,"逍遥散","太平惠民和剂局方","柴胡、当归、白芍、白术、茯苓、炙甘草（加烧生姜、薄荷）","疏肝解郁，养血健脾","肝郁血虚脾弱证","柴胡"],[2,"痛泻要方","丹溪心法","白术、白芍、陈皮、防风","补脾柔肝，祛湿止泻","脾虚肝旺之痛泻","白术"],[2,"半夏泻心汤","伤寒论","半夏、黄芩、干姜、人参、黄连、大枣、炙甘草","寒热平调，散结除痞","寒热互结之痞证","半夏"],[3,"白虎汤","伤寒论","石膏、知母、炙甘草、粳米","清热生津","气分热盛证","石膏"],[3,"竹叶石膏汤","伤寒论","竹叶、石膏、半夏、麦冬、人参、炙甘草、粳米","清热生津，益气和胃","伤寒、温病、暑病余热未清，气津两伤证","竹叶、石膏"],[3,"清营汤","温病条辨","犀角（水牛角代）、生地黄、玄参、竹叶心、麦冬、丹参、黄连、金银花、连翘","清营解毒，透热养阴","热入营分证",""],[3,"犀角地黄汤","小品方（录自外台秘要）","犀角（水牛角代）、生地黄、芍药、牡丹皮","清热解毒，凉血散瘀","热入血分证","犀角（水牛角）"],[3,"黄连解毒汤","肘后备急方（名见外台秘要）","黄连、黄芩、黄柏、栀子","泻火解毒","三焦火毒证","黄连"],[3,"凉膈散","太平惠民和剂局方","大黄、朴硝、炙甘草、栀子、薄荷、黄芩、连翘（加竹叶、白蜜）","泻火通便，清上泄下","上中二焦邪郁生热证","连翘"],[3,"普济消毒饮","东垣试效方","黄芩、黄连、陈皮、甘草、玄参、柴胡、桔梗、连翘、板蓝根、马勃、牛蒡子、薄荷、僵蚕、升麻","清热解毒，疏风散邪","大头瘟",""],[3,"清瘟败毒饮","疫疹一得","生石膏、生地黄、犀角、黄连、栀子、桔梗、黄芩、知母、赤芍、玄参、连翘、竹叶、甘草、牡丹皮","清热解毒，凉血泻火","瘟疫热毒，气血两燔证",""],[3,"导赤散","小儿药证直诀","生地黄、木通、生甘草梢、竹叶","清心利水养阴","心经火热证","生地黄、木通"],[3,"龙胆泻肝汤","医方集解","龙胆草、黄芩、栀子、泽泻、木通、车前子、当归、生地黄、柴胡、生甘草","清泻肝胆实火，清利肝经湿热","①肝胆实火上炎证 ②肝经湿热下注证","龙胆草"],[3,"左金丸","丹溪心法","黄连、吴茱萸（6:1）","清泻肝火，降逆止呕","肝火犯胃证","黄连"],[3,"泻白散","小儿药证直诀","地骨皮、桑白皮、炙甘草、粳米","清泻肺热，止咳平喘","肺热喘咳证","桑白皮"],[3,"清胃散","脾胃论","生地黄、当归身、牡丹皮、黄连、升麻","清胃凉血","胃火牙痛","黄连"],[3,"玉女煎","景岳全书","石膏、熟地黄、麦冬、知母、牛膝","清胃热，滋肾阴","胃热阴虚证","石膏"],[3,"芍药汤","素问病机气宜保命集","芍药、当归、黄连、槟榔、木香、甘草、大黄、黄芩、官桂","清热燥湿，调气和血","湿热痢疾",""],[3,"白头翁汤","伤寒论","白头翁、黄柏、黄连、秦皮","清热解毒，凉血止痢","热毒痢疾","白头翁"],[3,"青蒿鳖甲汤","温病条辨","青蒿、鳖甲、细生地、知母、牡丹皮","养阴透热","温病后期，邪伏阴分证","鳖甲、青蒿"],[3,"清骨散","证治准绳","银柴胡、胡黄连、秦艽、鳖甲、地骨皮、青蒿、知母、甘草","清虚热，退骨蒸","肝肾阴虚，虚火内扰证","银柴胡"],[3,"当归六黄汤","兰室秘藏","当归、生地黄、熟地黄、黄芩、黄柏、黄连、黄芪","滋阴泻火，固表止汗","阴虚火旺盗汗",""],[4,"香薷散","太平惠民和剂局方","香薷、白扁豆、厚朴","祛暑解表，化湿和中","阴暑","香薷"],[4,"清络饮","温病条辨","鲜荷叶边、鲜金银花、西瓜翠衣、鲜扁豆花、丝瓜皮、鲜竹叶心","祛暑清热","暑伤肺经气分轻证",""],[4,"六一散","黄帝素问宣明论方","滑石、甘草（6:1）","清暑利湿","暑湿证","滑石"],[4,"桂苓甘露散","黄帝素问宣明论方","茯苓、甘草、白术、泽泻、官桂、石膏、寒水石、滑石、猪苓","清暑解热，化气利湿","暑湿证","滑石"],[4,"清暑益气汤","温热经纬","西洋参、石斛、麦冬、黄连、竹叶、荷梗、知母、甘草、粳米、西瓜翠衣","清暑益气，养阴生津","暑热气津两伤证","西瓜翠衣、西洋参"],[5,"理中丸","伤寒论","人参、干姜、炙甘草、白术","温中祛寒，补气健脾","①脾胃虚寒证 ②阳虚失血证 ③中阳不足之胸痹、病后多涎唾、小儿慢惊","干姜"],[5,"小建中汤","伤寒论","桂枝、炙甘草、大枣、芍药、生姜、饴糖","温中补虚，和里缓急","中焦虚寒，肝脾不和证",""],[5,"吴茱萸汤","伤寒论","吴茱萸、人参、生姜、大枣","温中补虚，降逆止呕","肝胃虚寒，浊阴上逆证","吴茱萸"],[5,"大建中汤","金匮要略","蜀椒、干姜、人参、饴糖","温中补虚，缓急止痛","中阳衰弱，阴寒内盛之脘腹疼痛",""],[5,"四逆汤","伤寒论","生附子、干姜、炙甘草","回阳救逆","心肾阳衰寒厥证","附子"],[5,"回阳救急汤","伤寒六书","熟附子、干姜、人参、炙甘草、白术、肉桂、陈皮、五味子、茯苓、半夏（加生姜、麝香）","回阳固脱，益气生脉","寒邪直中三阴，真阳衰微证",""],[5,"当归四逆汤","伤寒论","当归、桂枝、芍药、细辛、通草、大枣、炙甘草","温经散寒，养血通脉","血虚寒厥证","当归、桂枝"],[5,"黄芪桂枝五物汤","金匮要略","黄芪、芍药、桂枝、生姜、大枣","益气温经，和血通痹","血痹",""],[5,"暖肝煎","景岳全书","当归、枸杞子、小茴香、肉桂、乌药、沉香、茯苓（加生姜）","温补肝肾，行气止痛","肝肾不足，寒滞肝脉证",""],[6,"葛根黄芩黄连汤","伤寒论","葛根、炙甘草、黄芩、黄连","解表清里","表证未解，邪热入里证（协热下利）","葛根"],[6,"五积散","仙授理伤续断秘方","白芷、川芎、炙甘草、茯苓、当归、肉桂、芍药、半夏、陈皮、枳壳、麻黄、苍术、干姜、桔梗、厚朴","发表温里，顺气化痰，活血消积","外感风寒，内伤生冷证",""],[6,"大柴胡汤","金匮要略","柴胡、黄芩、芍药、半夏、枳实、大黄、生姜、大枣","和解少阳，内泻热结","少阳阳明合病","柴胡"],[6,"防风通圣散","黄帝素问宣明论方","防风、川芎、当归、芍药、大黄、薄荷、麻黄、连翘、芒硝、石膏、黄芩、桔梗、滑石、甘草、荆芥、白术、栀子（加生姜）","疏风解表，泻热通便","风热壅盛，表里俱实证",""],[6,"疏凿饮子","济生方","泽泻、赤小豆、商陆、羌活、大腹皮、椒目、木通、秦艽、槟榔、茯苓皮（加生姜）","泻下逐水，疏风消肿","阳水实证",""],[7,"四君子汤","太平惠民和剂局方","人参、白术、茯苓、炙甘草","益气健脾","脾胃气虚证","人参"],[7,"参苓白术散","太平惠民和剂局方","莲子肉、薏苡仁、砂仁、桔梗、白扁豆、茯苓、人参、炙甘草、白术、山药","益气健脾，渗湿止泻","脾虚湿盛证",""],[7,"补中益气汤","内外伤辨惑论","黄芪、炙甘草、人参、当归、橘皮、升麻、柴胡、白术","补中益气，升阳举陷","①脾虚气陷证 ②气虚发热证","黄芪"],[7,"玉屏风散","究原方（录自医方类聚）","防风、黄芪、白术","益气固表止汗","表虚自汗","黄芪"],[7,"生脉散","医学启源","人参、麦冬、五味子","益气生津，敛阴止汗","①温热、暑热，耗气伤阴证 ②久咳伤肺，气阴两虚证","人参"],[7,"人参蛤蚧散","博济方","蛤蚧、杏仁、炙甘草、知母、桑白皮、人参、茯苓、贝母","补肺益肾，止咳定喘","肺肾气虚，痰热咳喘证","蛤蚧、人参"],[7,"四物汤","仙授理伤续断秘方","当归、川芎、白芍、熟地黄","补血和血","营血虚滞证","熟地黄"],[7,"当归补血汤","内外伤辨惑论","黄芪、当归（5:1）","补气生血","血虚发热证","黄芪"],[7,"归脾汤","济生方","白术、当归、茯苓、黄芪、远志、龙眼肉、酸枣仁、人参、木香、炙甘草（加生姜、大枣）","益气补血，健脾养心","①心脾气血两虚证 ②脾不统血证",""],[7,"八珍汤","瑞竹堂经验方","人参、白术、茯苓、当归、川芎、白芍、熟地黄、炙甘草（加生姜、大枣）","益气补血","气血两虚证","人参、熟地黄"],[7,"泰山磐石散","古今医统大全","人参、黄芪、白术、炙甘草、当归、川芎、白芍、熟地黄、续断、糯米、黄芩、砂仁","益气健脾，养血安胎","气血虚弱之胎动不安",""],[7,"六味地黄丸","小儿药证直诀","熟地黄、山茱萸、山药、泽泻、牡丹皮、茯苓","填精滋阴补肾","肾阴精不足证","熟地黄"],[7,"左归丸","景岳全书","熟地黄、山药、枸杞子、山茱萸、川牛膝、鹿角胶、龟板胶、菟丝子","滋阴补肾，填精益髓","真阴不足证","熟地黄"],[7,"大补阴丸","丹溪心法","熟地黄、龟板、黄柏、知母、猪脊髓（蜜丸）","滋阴降火","阴虚火旺证","熟地黄、龟板"],[7,"一贯煎","续名医类案","北沙参、麦冬、当归身、生地黄、枸杞子、川楝子","滋阴疏肝","肝肾阴虚，肝气郁滞证",""],[7,"二至丸","医方集解","女贞子、墨旱莲","补益肝肾，滋阴止血","肝肾阴虚证",""],[7,"益胃汤","温病条辨","沙参、麦冬、冰糖、细生地、玉竹","养阴益胃","胃阴不足证","生地黄、麦冬"],[7,"肾气丸","金匮要略","干地黄、山药、山茱萸、泽泻、茯苓、牡丹皮、桂枝、附子","补肾助阳，化生肾气","肾阳气不足证",""],[7,"右归丸","景岳全书","熟地黄、山药、山茱萸、枸杞子、菟丝子、鹿角胶、杜仲、肉桂、当归、制附子","温补肾阳，填精益髓","肾阳不足，命门火衰证",""],[7,"地黄饮子","圣济总录","熟干地黄、巴戟天、山茱萸、石斛、肉苁蓉、附子、五味子、官桂、茯苓、麦冬、石菖蒲、远志（加生姜、大枣、薄荷）","滋肾阴，补肾阳，开窍化痰","下元虚衰，痰浊上泛之喑痱证",""],[7,"龟鹿二仙胶","医便","鹿角、龟板、人参、枸杞子","滋阴填精，益气壮阳","真元虚损，精血不足证","鹿角、龟板"],[7,"七宝美髯丹","本草纲目（引积善堂方）","何首乌、茯苓、牛膝、当归、枸杞子、菟丝子、补骨脂","补益肝肾，乌发壮骨","肝肾不足证（须发早白）","何首乌"],[7,"炙甘草汤","伤寒论","炙甘草、生姜、桂枝、人参、生地黄、阿胶、麦冬、麻仁、大枣（清酒煎）","益气滋阴，通阳复脉","①阴血阳气虚弱，心脉失养证 ②虚劳肺痿",""],[8,"牡蛎散","太平惠民和剂局方","黄芪、麻黄根、煅牡蛎（加小麦）","敛阴止汗，益气固表","体虚自汗、盗汗证","煅牡蛎"],[8,"九仙散","卫生宝鉴（王子昭方）","人参、款冬花、桑白皮、桔梗、五味子、阿胶、乌梅、贝母、罂粟壳","敛肺止咳，益气养阴","久咳肺虚证","罂粟壳"],[8,"真人养脏汤","太平惠民和剂局方","人参、当归、白术、肉豆蔻、肉桂、炙甘草、白芍、木香、诃子、罂粟壳","涩肠固脱，温补脾肾","久泻久痢，脾肾虚寒证","罂粟壳"],[8,"四神丸","内科摘要","肉豆蔻、补骨脂、五味子、吴茱萸（姜、枣为丸）","温肾暖脾，固肠止泻","脾肾阳虚之肾泄（五更泻）","补骨脂"],[8,"桃花汤","伤寒论","赤石脂、干姜、粳米","温中涩肠止痢","虚寒血痢证","赤石脂"],[8,"金锁固精丸","医方集解","沙苑蒺藜、芡实、莲须、龙骨、牡蛎（莲子粉糊丸）","补肾涩精","肾虚不固之遗精","沙苑蒺藜"],[8,"桑螵蛸散","本草衍义","桑螵蛸、远志、石菖蒲、龙骨、人参、茯神、当归、龟甲","调补心肾，涩精止遗","心肾两虚证","桑螵蛸"],[8,"缩泉丸","魏氏家藏方","乌药、益智仁、山药","温肾祛寒，缩尿止遗","膀胱虚寒证","益智仁"],[8,"固冲汤","医学衷中参西录","白术、生黄芪、龙骨、牡蛎、山萸肉、生杭芍、海螵蛸、茜草、棕边炭、五倍子","固冲摄血，益气健脾","脾肾亏虚，冲脉不固证","白术、黄芪"],[8,"固经丸","丹溪心法","黄芩、白芍、龟板、椿根皮、黄柏、香附","滋阴清热，固经止血","阴虚血热之崩漏",""],[8,"易黄汤","傅青主女科","山药、芡实、黄柏、车前子、白果","固肾止带，清热祛湿","肾虚湿热带下","山药、芡实"],[9,"朱砂安神丸","内外伤辨惑论","朱砂、黄连、炙甘草、生地黄、当归","镇心安神，清热养血","心火亢盛，阴血不足证","朱砂"],[9,"磁朱丸","备急千金要方","磁石、朱砂、神曲","重镇安神，交通心肾","心肾不交证","磁石"],[9,"天王补心丹","校注妇人良方","人参、茯苓、玄参、丹参、桔梗、远志、当归、五味子、麦冬、天冬、柏子仁、酸枣仁、生地黄（朱砂为衣）","滋阴养血，补心安神","阴虚血少，神志不安证","生地黄"],[9,"酸枣仁汤","金匮要略","酸枣仁、甘草、知母、茯苓、川芎","养血安神，清热除烦","肝血不足，虚热内扰证","酸枣仁"],[9,"甘麦大枣汤","金匮要略","甘草、小麦、大枣","养心安神，和中缓急","脏躁","小麦"],[10,"安宫牛黄丸","温病条辨","牛黄、郁金、犀角（水牛角代）、黄连、朱砂、冰片、麝香、珍珠、栀子、雄黄、黄芩（金箔为衣）","清热开窍，豁痰解毒","邪热内陷心包证","牛黄、犀角、麝香"],[10,"紫雪","外台秘要（苏恭方）","石膏、寒水石、滑石、磁石、犀角、羚羊角、青木香、沉香、玄参、升麻、甘草、丁香、芒硝、硝石、麝香、朱砂、黄金","清热开窍，息风止痉","温热病，热闭心包及热盛动风证","犀角、羚羊角、麝香"],[10,"至宝丹","灵苑方（录自苏沈良方）","犀角、朱砂、雄黄、玳瑁、琥珀、麝香、冰片、金箔、银箔、牛黄、安息香","清热开窍，化浊解毒","痰热内闭心包证","犀角、牛黄、麝香"],[10,"苏合香丸","广济方（录自外台秘要）","苏合香、麝香、冰片、安息香、青木香、香附、白檀香、丁香、沉香、荜茇、熏陆香、白术、诃黎勒、朱砂、犀角","温通开窍，行气止痛","寒闭证","苏合香、麝香、冰片、安息香"],[11,"越鞠丸","丹溪心法","香附、川芎、苍术、栀子、神曲","行气解郁","六郁证","香附"],[11,"柴胡疏肝散","证治准绳（引医学统旨）","陈皮、柴胡、川芎、香附、枳壳、芍药、炙甘草","疏肝解郁，行气止痛","肝气郁滞证","柴胡"],[11,"金铃子散","太平圣惠方","金铃子、延胡索","疏肝泄热，活血止痛","肝郁化火证","金铃子"],[11,"瓜蒌薤白白酒汤","金匮要略","瓜蒌实、薤白、白酒","通阳散结，行气祛痰","胸阳不振，痰气互结之胸痹轻证","瓜蒌"],[11,"半夏厚朴汤","金匮要略","半夏、厚朴、茯苓、生姜、苏叶","行气散结，降逆化痰","梅核气","半夏"],[11,"枳实消痞丸","兰室秘藏","干生姜、炙甘草、麦芽曲、茯苓、白术、半夏曲、人参、厚朴、枳实、黄连","消痞除满，健脾和胃","脾虚气滞，寒热互结证","枳实"],[11,"厚朴温中汤","内外伤辨惑论","厚朴、陈皮、炙甘草、茯苓、草豆蔻仁、木香、干姜（加生姜）","行气除满，温中燥湿","脾胃寒湿气滞证","厚朴"],[11,"天台乌药散","圣济总录","天台乌药、木香、小茴香、青皮、高良姜、槟榔、川楝子、巴豆","行气疏肝，散寒止痛","寒凝肝脉所致的疝气","乌药"],[11,"苏子降气汤","太平惠民和剂局方","紫苏子、半夏、当归、炙甘草、前胡、厚朴、肉桂（加生姜、大枣、苏叶）","降气平喘，祛痰止咳","上实下虚之喘咳证","紫苏子"],[11,"定喘汤","摄生众妙方","白果、麻黄、苏子、甘草、款冬花、杏仁、桑白皮、黄芩、半夏","宣降肺气，清热化痰","风寒外束，痰热内蕴之哮喘","麻黄、白果"],[11,"四磨汤","济生方","人参、槟榔、沉香、乌药","行气降逆，宽胸散结","肝气郁结证","乌药"],[11,"旋覆代赭汤","伤寒论","旋覆花、人参、生姜、代赭石、炙甘草、半夏、大枣","降逆化痰，益气和胃","胃虚痰阻气逆证","旋覆花"],[11,"橘皮竹茹汤","金匮要略","橘皮、竹茹、大枣、生姜、甘草、人参","降逆止呃，益气清热","胃虚有热之呃逆","橘皮、竹茹"],[11,"丁香柿蒂汤","症因脉治","丁香、柿蒂、人参、生姜","温中益气，降逆止呃","胃气虚寒之呃逆","丁香、柿蒂"],[12,"桃核承气汤","伤寒论","桃仁、大黄、桂枝、炙甘草、芒硝","逐瘀泻热","下焦蓄血证",""],[12,"血府逐瘀汤","医林改错","桃仁、红花、当归、生地黄、牛膝、川芎、桔梗、赤芍、枳壳、甘草、柴胡","活血化瘀，行气止痛","胸中血瘀证","桃仁、红花"],[12,"补阳还五汤","医林改错","生黄芪、当归尾、赤芍、地龙、川芎、红花、桃仁","补气，活血，通络","中风之气虚血瘀证","黄芪"],[12,"复元活血汤","医学发明","柴胡、瓜蒌根、当归、红花、甘草、穿山甲、酒大黄、桃仁","活血祛瘀，疏肝通络","跌打损伤，瘀血阻滞证","酒大黄、柴胡"],[12,"温经汤","金匮要略","吴茱萸、当归、芍药、川芎、人参、桂枝、阿胶、牡丹皮、生姜、甘草、半夏、麦冬","温经散寒，养血祛瘀","冲任虚寒，瘀血阻滞证",""],[12,"生化汤","傅青主女科","全当归、川芎、桃仁、炮干姜、炙甘草（黄酒、童便各半煎）","养血祛瘀，温经止痛","血虚寒凝，瘀血阻滞证","当归"],[12,"桂枝茯苓丸","金匮要略","桂枝、茯苓、牡丹皮、桃仁、芍药","活血化瘀，缓消癥块","瘀阻胞宫证","桂枝"],[12,"失笑散","太平惠民和剂局方","五灵脂、蒲黄","活血祛瘀，散结止痛","瘀血停滞证",""],[12,"大黄䗪虫丸","金匮要略","大黄、黄芩、甘草、桃仁、杏仁、芍药、干地黄、干漆、虻虫、水蛭、蛴螬、䗪虫","活血消癥，祛瘀生新","五劳虚极，瘀血内停之干血痨","大黄、䗪虫"],[12,"十灰散","十药神书","大蓟、小蓟、荷叶、侧柏叶、白茅根、茜根、栀子、大黄、牡丹皮、棕榈皮","凉血止血","血热妄行之上部出血证",""],[12,"咳血方","丹溪心法","青黛、瓜蒌仁、海粉、栀子、诃子","清肝宁肺，凉血止血","肝火犯肺之咳血证","青黛、栀子"],[12,"小蓟饮子","济生方（录自玉机微义）","生地黄、小蓟、滑石、木通、蒲黄、藕节、淡竹叶、当归、栀子、炙甘草","凉血止血，利水通淋","热结下焦之血淋、尿血","小蓟"],[12,"槐花散","普济本事方","槐花、侧柏叶、荆芥穗、枳壳","清肠止血，疏风行气","风热湿毒，壅遏肠道，损伤血络证","槐花"],[12,"黄土汤","金匮要略","甘草、干地黄、白术、附子、阿胶、黄芩、灶心黄土","温阳健脾，养血止血","脾阳不足，脾不统血证","灶心黄土"],[13,"川芎茶调散","太平惠民和剂局方","川芎、荆芥、白芷、羌活、甘草、细辛、防风、薄荷（清茶调下）","疏风止痛","外感风邪头痛",""],[13,"大秦艽汤","素问病机气宜保命集","秦艽、甘草、川芎、当归、白芍、细辛、羌活、防风、黄芩、石膏、白芷、白术、生地黄、熟地黄、茯苓、独活","疏风清热，养血活血","风邪初中经络证",""],[13,"消风散","外科正宗","当归、生地黄、防风、蝉蜕、知母、苦参、胡麻、荆芥、苍术、牛蒡子、石膏、甘草、木通","疏风除湿，清热养血","风疹、湿疹",""],[13,"牵正散","杨氏家藏方","白附子、白僵蚕、全蝎","祛风化痰，通络止痉","风中头面经络（口眼㖞斜）","白附子"],[13,"小活络丹","太平惠民和剂局方","川乌、草乌、地龙、天南星、乳香、没药","祛风除湿，化痰通络，活血止痛","风寒湿痹","川乌、草乌"],[13,"玉真散","外科正宗","南星、防风、白芷、天麻、羌活、白附子","祛风化痰，定搐止痉","破伤风",""],[13,"羚角钩藤汤","通俗伤寒论","羚羊角、桑叶、川贝母、鲜生地、钩藤、菊花、茯神木、生白芍、生甘草、淡竹茹","凉肝息风，增液舒筋","肝热生风证","羚羊角、钩藤"],[13,"镇肝熄风汤","医学衷中参西录","怀牛膝、生赭石、生龙骨、生牡蛎、生龟板、生杭芍、玄参、天冬、川楝子、生麦芽、茵陈、甘草","镇肝息风，滋阴潜阳","类中风","怀牛膝"],[13,"天麻钩藤饮","中医内科杂病证治新义","天麻、钩藤、石决明、栀子、黄芩、川牛膝、杜仲、益母草、桑寄生、夜交藤、朱茯神","平肝息风，清热活血，补益肝肾","肝阳偏亢，肝风上扰证","天麻、钩藤"],[13,"大定风珠","温病条辨","生白芍、阿胶、生龟板、干地黄、麻仁、五味子、生牡蛎、麦冬、炙甘草、鸡子黄、鳖甲","滋阴息风","阴虚风动证",""],[14,"杏苏散","温病条辨","苏叶、半夏、茯苓、前胡、桔梗、枳壳、甘草、生姜、大枣、杏仁、橘皮","轻宣凉燥，理肺化痰","外感凉燥证","杏仁、苏叶"],[14,"桑杏汤","温病条辨","桑叶、杏仁、沙参、象贝、香豉、栀皮、梨皮","清宣温燥，润肺止咳","外感温燥证",""],[14,"清燥救肺汤","医门法律","桑叶、石膏、甘草、人参、胡麻仁、阿胶、麦冬、杏仁、枇杷叶","清燥润肺，养阴益气","温燥伤肺，气阴两伤证",""],[14,"麦门冬汤","金匮要略","麦冬、半夏、人参、甘草、粳米、大枣","清养肺胃，降逆下气","①虚热肺痿 ②胃阴不足证","麦冬"],[14,"养阴清肺汤","重楼玉钥","生地黄、麦冬、生甘草、玄参、贝母、牡丹皮、薄荷、白芍","养阴清肺，解毒利咽","阴虚肺燥之白喉",""],[14,"百合固金汤","慎斋遗书","熟地黄、生地黄、当归身、白芍、甘草、桔梗、玄参、贝母、麦冬、百合","滋养肺肾，止咳化痰","肺肾阴亏，虚火上炎证","百合、生地黄、熟地黄"],[14,"玉液汤","医学衷中参西录","生山药、生黄芪、知母、生鸡内金、葛根、五味子、天花粉","益气滋阴，固肾止渴","气阴两虚之消渴","山药、黄芪"],[14,"增液汤","温病条辨","玄参、麦冬、细生地","增液润燥","阳明温病，津亏便秘证","玄参"],[15,"平胃散","简要济众方","苍术、厚朴、陈皮、炙甘草（加生姜、大枣）","燥湿运脾，行气和胃","湿滞脾胃证","苍术"],[15,"藿香正气散","太平惠民和剂局方","大腹皮、白芷、紫苏、茯苓、半夏曲、白术、陈皮、厚朴、桔梗、藿香、炙甘草（加生姜、大枣）","解表化湿，理气和中","外感风寒，内伤湿滞证","藿香"],[15,"茵陈蒿汤","伤寒论","茵陈、栀子、大黄","清热利湿退黄","湿热黄疸","茵陈"],[15,"八正散","太平惠民和剂局方","车前子、瞿麦、萹蓄、滑石、栀子、炙甘草、木通、大黄（加灯心）","清热泻火，利水通淋","湿热淋证",""],[15,"三仁汤","温病条辨","杏仁、滑石、通草、白蔻仁、竹叶、厚朴、生薏苡仁、半夏","宣畅气机，清利湿热","湿温初起及暑温夹湿之湿重于热证",""],[15,"甘露消毒丹","医效秘传","滑石、黄芩、茵陈、石菖蒲、川贝母、木通、藿香、连翘、白蔻仁、薄荷、射干","利湿化浊，清热解毒","湿温时疫，邪在气分，湿热并重证",""],[15,"连朴饮","霍乱论","制厚朴、川黄连、石菖蒲、制半夏、香豉、焦栀子、芦根","清热化湿，理气和中","湿热霍乱",""],[15,"当归拈痛汤","医学启源","羌活、甘草、茵陈、防风、苍术、当归身、知母、猪苓、泽泻、升麻、白术、黄芩、葛根、人参、苦参","利湿清热，疏风止痛","湿热相搏，外受风邪证",""],[15,"二妙散","丹溪心法","黄柏、苍术","清热燥湿","湿热下注证","黄柏"],[15,"五苓散","伤寒论","猪苓、泽泻、白术、茯苓、桂枝","利水渗湿，温阳化气","①膀胱气化不利之蓄水证 ②水湿内停证 ③痰饮","泽泻"],[15,"猪苓汤","伤寒论","猪苓、茯苓、泽泻、阿胶、滑石","利水，养阴，清热","水热互结伤阴证","猪苓"],[15,"防己黄芪汤","金匮要略","防己、黄芪、甘草、白术（加生姜、大枣）","益气祛风，健脾利水","表虚不固之风水或风湿证","防己、黄芪"],[15,"五皮散","华氏中藏经","生姜皮、桑白皮、陈橘皮、大腹皮、茯苓皮","利水消肿，理气健脾","皮水",""],[15,"苓桂术甘汤","金匮要略","茯苓、桂枝、白术、炙甘草","温阳化饮，健脾利湿","中阳不足之痰饮","茯苓"],[15,"真武汤","伤寒论","茯苓、芍药、白术、生姜、炮附子","温阳利水","阳虚水泛证","附子"],[15,"实脾散","重订严氏济生方","厚朴、白术、木瓜、木香、草果仁、大腹子、附子、茯苓、干姜、炙甘草（加生姜、大枣）","温阳健脾，行气利水","脾肾阳虚，水气内停之阴水","附子、干姜"],[15,"萆薢分清散","杨氏家藏方","益智仁、川萆薢、石菖蒲、乌药（入盐煎）","温肾利湿，分清化浊","下焦虚寒之膏淋、白浊","萆薢"],[15,"完带汤","傅青主女科","白术、山药、人参、白芍、车前子、苍术、甘草、陈皮、黑芥穗、柴胡","补脾疏肝，化湿止带","脾虚肝郁，湿浊带下","白术、山药"],[15,"羌活胜湿汤","脾胃论","羌活、独活、藁本、防风、炙甘草、蔓荆子、川芎","祛风胜湿止痛","风湿在表之痹证","羌活、独活"],[15,"独活寄生汤","备急千金要方","独活、桑寄生、杜仲、牛膝、细辛、秦艽、茯苓、肉桂心、防风、川芎、人参、甘草、当归、芍药、干地黄","祛风湿，止痹痛，益肝肾，补气血","痹证日久，肝肾两虚，气血不足证","独活"],[16,"二陈汤","太平惠民和剂局方","半夏、橘红、茯苓、炙甘草（加生姜、乌梅）","燥湿化痰，理气和中","湿痰证","半夏"],[16,"温胆汤","三因极一病证方论","半夏、竹茹、枳实、陈皮、炙甘草、茯苓（加生姜、大枣）","理气化痰，清胆和胃","胆郁痰扰证","半夏"],[16,"茯苓丸","全生指迷方（录自是斋百一选方）","茯苓、枳壳、半夏、风化朴硝（姜汁糊丸）","燥湿行气，软坚化痰","痰伏中脘，流注经络证","半夏"],[16,"清气化痰丸","医方考","陈皮、杏仁、枳实、黄芩、瓜蒌仁、茯苓、胆南星、制半夏（姜汁为丸）","清热化痰，理气止咳","痰热咳嗽","胆南星"],[16,"小陷胸汤","伤寒论","黄连、半夏、瓜蒌实","清热化痰，宽胸散结","痰热互结之小结胸证","瓜蒌实"],[16,"滚痰丸","泰定养生主论（录自玉机微义）","大黄、黄芩、礞石、沉香","泻火逐痰","实热老痰证","礞石"],[16,"贝母瓜蒌散","医学心悟","贝母、瓜蒌、天花粉、茯苓、橘红、桔梗","润肺清热，理气化痰","燥痰咳嗽","贝母"],[16,"苓甘五味姜辛汤","金匮要略","茯苓、甘草、干姜、细辛、五味子","温肺化饮","寒饮咳嗽","干姜"],[16,"三子养亲汤","韩氏医通","紫苏子、白芥子、莱菔子","温肺化痰，降气消食","痰壅气逆食滞证",""],[16,"半夏白术天麻汤","医学心悟","半夏、天麻、茯苓、橘红、白术、甘草（加生姜、大枣）","化痰息风，健脾祛湿","风痰上扰证","半夏、天麻"],[16,"定痫丸","医学心悟","天麻、川贝母、半夏、茯苓、茯神、胆南星、石菖蒲、全蝎、僵蚕、琥珀、陈皮、远志、丹参、麦冬、辰砂（竹沥、姜汁、甘草熬膏为丸）","涤痰息风，清热定痫","痰热痫证",""],[17,"保和丸","丹溪心法","山楂、神曲、半夏、茯苓、陈皮、连翘、莱菔子","消食和胃","食滞胃脘证","山楂"],[17,"枳实导滞丸","内外伤辨惑论","大黄、枳实、神曲、茯苓、黄芩、黄连、白术、泽泻","消导化积，清热利湿","湿热食积证","大黄"],[17,"木香槟榔丸","儒门事亲","木香、槟榔、青皮、陈皮、莪术、黄连、黄柏、大黄、香附、牵牛","行气导滞，攻积泄热","痢疾，食积","木香、槟榔"],[17,"健脾丸","证治准绳","白术、木香、黄连、甘草、茯苓、人参、神曲、陈皮、砂仁、麦芽、山楂、山药、肉豆蔻","健脾和胃，消食止泻","脾虚食积证",""],[18,"乌梅丸","伤寒论","乌梅、细辛、干姜、黄连、当归、附子、蜀椒、桂枝、人参、黄柏","温脏安蛔","脏寒蛔厥证","乌梅"],[18,"肥儿丸","太平惠民和剂局方","神曲、黄连、肉豆蔻、使君子、麦芽、槟榔、木香","杀虫消积，健脾清热","小儿疳积",""],[19,"瓜蒂散","伤寒论","瓜蒂、赤小豆（香豉煎汤送服）","涌吐痰涎宿食","痰涎宿食，壅滞胸脘证","瓜蒂"],[20,"仙方活命饮","校注妇人良方","白芷、贝母、防风、赤芍、当归尾、甘草节、皂角刺、穿山甲、天花粉、乳香、没药、金银花、陈皮","清热解毒，消肿溃坚，活血止痛","阳证痈疡肿毒初起","金银花"],[20,"五味消毒饮","医宗金鉴","金银花、野菊花、蒲公英、紫花地丁、紫背天葵子","清热解毒，消散疔疮","火毒结聚之疔疮","金银花"],[20,"四妙勇安汤","验方新编","金银花、玄参、当归、甘草","清热解毒，活血止痛","热毒炽盛之脱疽","金银花"],[20,"犀黄丸","外科证治全生集","犀黄（牛黄）、麝香、乳香、没药、黄米饭","活血行瘀，解毒消痈","乳岩、横痃、瘰疬、痰核、流注、肺痈、小肠痈",""],[20,"阳和汤","外科证治全生集","熟地黄、麻黄、鹿角胶、白芥子、肉桂、生甘草、炮姜炭","温阳补血，散寒通滞","阴疽","熟地黄、鹿角胶"],[20,"海藻玉壶汤","外科正宗","海藻、贝母、陈皮、昆布、青皮、川芎、当归、半夏、连翘、甘草节、独活、海带","化痰软坚，散结消瘿","瘿瘤初起",""],[20,"消瘰丸","医学心悟","玄参、牡蛎、贝母","清热化痰，软坚散结","瘰疬、痰核",""],[20,"苇茎汤","外台秘要（引古今录验方）","苇茎、薏苡仁、瓜瓣、桃仁","清肺化痰，逐瘀排脓","肺痈","苇茎"],[20,"大黄牡丹汤","金匮要略","大黄、牡丹皮、桃仁、冬瓜仁、芒硝","泻热破瘀，散结消肿","肠痈初起，湿热瘀滞证",""],[20,"透脓散","外科正宗","黄芪、穿山甲、川芎、当归、皂角刺","补气养血，托毒溃痈","痈疮脓成难溃","黄芪"],[20,"内补黄芪汤","外科发挥","黄芪、麦冬、熟地黄、人参、茯苓、甘草、白芍、远志、川芎、官桂、当归（加生姜、大枣）","温补气血，生肌敛疮","痈疽溃后，气血皆虚证",""],[20,"牛蒡解肌汤","疡科心得集","牛蒡子、薄荷、荆芥、连翘、栀子、牡丹皮、石斛、玄参、夏枯草","疏风清热，凉血消肿","头面风热，或颈项痰毒，风热牙痈",""]]}</script>
+<script>
+(function(){
+"use strict";
+var D=JSON.parse(document.getElementById('fdata').textContent);
+var CH=D.chapters,F=D.f; // f: [chapterIdx, name, source, herbs, function, indication, jun]
+var KINDS=[{k:'zc',name:'组成',ask:'写出组成药物'},{k:'gz',name:'功用·主治',ask:'说出功用与主治'},{k:'rf',name:'认方',ask:'这是哪首方？'}];
+var KEY='fangji-cards-v1',SKEY='fangji-cards-settings-v1';
+function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var C=load(KEY,{}); // cardId -> {d:dueDay,i:interval,e:ease,r:reps,l:lapses}
+var S=load(SKEY,{perDay:15,kinds:{zc:1,gz:1,rf:1},decks:null,newLog:{}});
+if(!S.decks){S.decks={};for(var c=0;c<CH.length;c++)S.decks[c]=1}
+if(!S.newLog)S.newLog={};
+var app=document.getElementById('app');
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function today(){var d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/86400000)}
+function cid(fi,k){return fi+':'+k}
+function allCards(){var a=[];for(var i=0;i<F.length;i++){if(!S.decks[F[i][0]])continue;KINDS.forEach(function(K){if(S.kinds[K.k])a.push({f:i,k:K.k,id:cid(i,K.k)})})}return a}
+function newToday(){return S.newLog[today()]||0}
+function queue(){
+  var t=today(),due=[],fresh=[];
+  allCards().forEach(function(c){var s=C[c.id];if(s){if(s.d<=t)due.push(c)}else fresh.push(c)});
+  due.sort(function(a,b){return C[a.id].d-C[b.id].d});
+  var room=Math.max(0,S.perDay-newToday());
+  // new cards: interleave kinds so one formula's three cards are not back to back
+  fresh.sort(function(a,b){return F[a.f][0]-F[b.f][0]||(a.f+kindOrder(a.k)*4)-(b.f+kindOrder(b.k)*4)||kindOrder(a.k)-kindOrder(b.k)});
+  return{due:due,fresh:fresh.slice(0,room),freshTotal:fresh.length};
+}
+function kindOrder(k){return k==='zc'?0:k==='gz'?1:2}
+function stats(){
+  var m=0,l=0,u=0,t=0;
+  allCards().forEach(function(c){t++;var s=C[c.id];if(!s)u++;else if(s.i>=21)m++;else l++});
+  return{m:m,l:l,u:u,t:t};
+}
+
+// ---------- scheduling ----------
+function preview(c,g){var s=C[c.id];return next(s,g).i}
+function next(s,g){
+  var n=s?{d:s.d,i:s.i,e:s.e,r:s.r,l:s.l}:{d:0,i:0,e:2.5,r:0,l:0};
+  if(g===1){if(s&&s.r>0){n.l++;n.e=Math.max(1.3,n.e-0.2)}n.i=0;n.r=0}
+  else if(!s||n.r===0){n.i=g===2?1:g===3?2:4;n.r=1;if(g===4)n.e+=0.15}
+  else if(g===2){n.i=Math.max(n.i+1,Math.round(n.i*1.2));n.e=Math.max(1.3,n.e-0.15);n.r++}
+  else if(g===3){n.i=Math.max(n.i+1,Math.round(n.i*n.e));n.r++}
+  else{n.i=Math.max(n.i+2,Math.round(n.i*n.e*1.3));n.e+=0.15;n.r++}
+  n.d=today()+n.i;return n;
+}
+function ivlText(i){if(i===0)return'稍后再现';if(i<30)return i+' 天';if(i<365)return Math.round(i/30)+' 个月';return(i/365).toFixed(1)+' 年'}
+
+// ---------- home ----------
+function home(msg){
+  var q=queue(),st=stats();
+  var h='<nav class="toplink" style="gap:8px;flex-wrap:wrap"><a href="games.html">方剂游戏 →</a><a href="index.html">做习题 →</a></nav>';
+  h+='<header class="masthead"><div><div class="label">十四五版 · 代表方 '+F.length+' 首</div><h1>方剂记忆卡</h1><div class="sub">看方名想组成，看功用认方剂 · 按遗忘规律安排复习</div></div><span class="seal">日日新</span></header>';
+  h+='<div class="today tnum"><div><span class="label">今日到期</span><b>'+q.due.length+'</b></div><div><span class="label">今日新卡</span><b style="color:var(--dai)">'+q.fresh.length+'</b></div><div><span class="label">已牢记</span><b style="color:var(--ai)">'+st.m+'</b></div></div>';
+  var total=q.due.length+q.fresh.length;
+  h+='<button class="go" id="b-go"'+(total?'':' disabled')+'>'+(total?'开始今天的复习<small>约 '+Math.max(1,Math.round(total*0.25))+' 分钟 · '+total+' 张</small>':'今天的卡片都复习完了<small>'+(q.freshTotal?'明天会有新卡；也可以在下方调高每日新卡数':'所选章节已全部学过')+'</small>')+'</button>';
+  h+='<div class="sectionhead"><h2>学习进度</h2><span class="label tnum">共 '+st.t+' 张卡</span></div>';
+  h+='<div class="panel"><div class="mast"><i style="width:'+(st.m/st.t*100)+'%;background:var(--ai)"></i><i style="width:'+(st.l/st.t*100)+'%;background:var(--dai)"></i></div><div class="legend tnum"><span style="--c:var(--ai)">已牢记 '+st.m+'（间隔 ≥ 21 天）</span><span style="--c:var(--dai)">学习中 '+st.l+'</span><span style="--c:var(--rule)">未学 '+st.u+'</span></div></div>';
+  h+='<div class="sectionhead"><h2>选择章节</h2><span><button class="linkbtn" id="b-all">全选</button>　<button class="linkbtn" id="b-none">全不选</button></span></div><div class="chips">';
+  for(var c=0;c<CH.length;c++){var n=0;for(var i=0;i<F.length;i++)if(F[i][0]===c)n++;h+='<button class="chip" data-ch="'+c+'" aria-pressed="'+(S.decks[c]?'true':'false')+'">'+esc(CH[c])+'<small class="tnum">'+n+'</small></button>'}
+  h+='</div>';
+  h+='<div class="sectionhead"><h2>设置</h2></div><div class="panel">';
+  h+='<div class="setrow"><span>卡片类型</span><span class="opts">';
+  KINDS.forEach(function(K){h+='<button class="chip kind" data-k="'+K.k+'" aria-pressed="'+(S.kinds[K.k]?'true':'false')+'">'+K.name+'</button>'});
+  h+='</span></div><div class="setrow"><span>每日新卡</span><span class="opts">';
+  [5,10,15,20,30,50].forEach(function(n){h+='<button class="chip per" data-n="'+n+'" aria-pressed="'+(S.perDay===n?'true':'false')+'">'+n+'</button>'});
+  h+='</span></div></div>';
+  h+='<div class="sectionhead"><h2>方剂速查</h2><span class="label">点开看全部内容</span></div>';
+  h+='<input class="search" id="q" type="search" placeholder="搜方名、药名或功用，如：柴胡、补中益气" autocomplete="off"><div class="flist" id="flist"></div>';
+  h+='<div class="sectionhead"><h2>换设备与备份</h2><span class="label">进度只存在本机</span></div>';
+  h+='<div class="panel"><p>点“复制进度码”，用 WhatsApp 或微信发给自己，在另一台设备粘贴后点“导入”。两边记录会合并，保留复习次数多的那一份。</p><div class="row"><button class="btn" id="b-exp">复制进度码</button><button class="btn" id="b-imp">导入</button></div><textarea id="code" placeholder="在这里粘贴进度码"></textarea><div class="msg" id="msg">'+(msg||'')+'</div></div>';
+  h+='<p class="foot">组成、功用、主治依十四五版《方剂学》及课堂讲义整理，198 首的功用已与讲义原文核对。君药一项空缺的，是十四五版教材未分君臣佐使或各版说法不一。组成中红框为君药。</p>';
+  app.innerHTML=h;
+  bindHome();renderList('');
+}
+function bindHome(){
+  document.getElementById('b-go').onclick=startReview;
+  Array.prototype.forEach.call(document.querySelectorAll('.chip[data-ch]'),function(b){b.onclick=function(){var c=b.getAttribute('data-ch');S.decks[c]=S.decks[c]?0:1;save(SKEY,S);home()}});
+  document.getElementById('b-all').onclick=function(){for(var c=0;c<CH.length;c++)S.decks[c]=1;save(SKEY,S);home()};
+  document.getElementById('b-none').onclick=function(){for(var c=0;c<CH.length;c++)S.decks[c]=0;save(SKEY,S);home()};
+  Array.prototype.forEach.call(document.querySelectorAll('.chip.kind'),function(b){b.onclick=function(){var k=b.getAttribute('data-k');S.kinds[k]=S.kinds[k]?0:1;if(!S.kinds.zc&&!S.kinds.gz&&!S.kinds.rf)S.kinds[k]=1;save(SKEY,S);home()}});
+  Array.prototype.forEach.call(document.querySelectorAll('.chip.per'),function(b){b.onclick=function(){S.perDay=+b.getAttribute('data-n');save(SKEY,S);home()}});
+  var qi=document.getElementById('q');qi.oninput=function(){renderList(qi.value.trim())};
+  var code=document.getElementById('code'),msg=document.getElementById('msg');
+  document.getElementById('b-exp').onclick=function(){
+    var s='FC1:'+btoa(unescape(encodeURIComponent(JSON.stringify({v:1,c:C}))));code.value=s;
+    var fb=function(){code.select();msg.textContent='请长按上面的文字，全选后复制。'};
+    try{navigator.clipboard.writeText(s).then(function(){msg.textContent='进度码已复制（'+Object.keys(C).length+' 张卡的记录）。'},fb)}catch(e){fb()}
+  };
+  document.getElementById('b-imp').onclick=function(){
+    try{var t=code.value.trim(),m=t.indexOf('FC1:');if(m<0)throw 0;
+      var o=JSON.parse(decodeURIComponent(escape(atob(t.slice(m+4).replace(/\s+/g,''))))),n=0;
+      for(var id in o.c){var a=o.c[id],b=C[id];if(!b||(a.r+a.l)>(b.r+b.l)||((a.r+a.l)===(b.r+b.l)&&a.d>b.d)){C[id]=a;n++}}
+      save(KEY,C);home('已导入，更新了 '+n+' 张卡的记录。');
+    }catch(e){msg.textContent='无法识别这段进度码。请确认复制完整（以 FC1: 开头）。'}
+  };
+}
+function herbsHtml(f){
+  var jun=f[6]?f[6].split('、'):[];
+  var parts=f[3].split(/（/);var main=parts[0],extra=parts.length>1?'（'+parts.slice(1).join('（'):'';
+  var h='<div class="herbs">';
+  main.split('、').forEach(function(x){x=x.trim();if(!x)return;var isJ=jun.some(function(j){var jj=j.replace(/（.*?）/g,'');return x===jj||x.indexOf(jj)>=0||jj.indexOf(x)>=0});h+='<span'+(isJ?' class="jun"':'')+'>'+esc(x)+'</span>'});
+  h+='</div>';if(extra)h+='<div class="label" style="margin-top:4px;letter-spacing:0">'+esc(extra)+'</div>';
+  return h;
+}
+function srcText(x){var i=x.indexOf('（');return esc(i<0?'《'+x+'》':'《'+x.slice(0,i)+'》'+x.slice(i))}
+function fullHtml(f,opts){
+  opts=opts||{};
+  var h='';
+  if(!opts.noName)h+='<div class="field"><span class="label">方名 · 出处</span><div class="v big">'+esc(f[1])+'　<span style="font-size:15px;color:var(--muted)">'+srcText(f[2])+'</span></div></div>';
+  h+='<div class="field"><span class="label">组成'+(f[6]?'（红框为君药）':'')+'</span>'+herbsHtml(f)+'</div>';
+  h+='<div class="field"><span class="label">功用</span><div class="v big">'+esc(f[4])+'</div></div>';
+  h+='<div class="field"><span class="label">主治</span><div class="v">'+esc(f[5])+'</div></div>';
+  h+='<div class="field"><span class="label">君药</span><div class="v">'+(f[6]?esc(f[6]):'<span style="color:var(--muted)">十四五版未分或说法不一</span>')+'</div></div>';
+  return h;
+}
+function renderList(q){
+  var el=document.getElementById('flist');if(!el)return;
+  var h='',n=0;
+  for(var i=0;i<F.length;i++){var f=F[i];
+    if(q&&(f[1]+f[3]+f[4]+f[5]+f[2]).indexOf(q)<0)continue;
+    n++;
+    if(n>40&&!q)break;
+    h+='<details class="fitem"><summary><b>'+esc(f[1])+'</b><span>'+esc(CH[f[0]])+'</span></summary><div class="answer" style="border:0;padding-top:10px">'+fullHtml(f,{noName:true})+'</div></details>';
+  }
+  if(!q&&F.length>40)h+='<p class="label" style="letter-spacing:0">显示前 40 首，输入关键字可搜索全部 '+F.length+' 首。</p>';
+  if(q&&!n)h='<p class="label" style="letter-spacing:0">没有找到“'+esc(q)+'”。</p>';
+  el.innerHTML=h;
+}
+
+// ---------- review ----------
+var R=null;
+function startReview(){
+  var q=queue();
+  var newC=q.fresh;
+  // mix: one new card after every two reviews
+  var list=[],di=0,ni=0;
+  while(di<q.due.length||ni<newC.length){
+    if(di<q.due.length)list.push(q.due[di++]);
+    if(di<q.due.length)list.push(q.due[di++]);
+    if(ni<newC.length)list.push(newC[ni++]);
+  }
+  R={list:list,pos:0,shown:false,done:0,again:0,newIds:{}};
+  newC.forEach(function(c){R.newIds[c.id]=1});
+  show();
+}
+function show(){
+  window.scrollTo(0,0);
+  if(R.pos>=R.list.length)return finish();
+  var c=R.list[R.pos],f=F[c.f],K=KINDS.filter(function(x){return x.k===c.k})[0],s=C[c.id];
+  var left=R.list.length-R.pos,nNew=0,nLearn=0,nRev=0;
+  for(var p=R.pos;p<R.list.length;p++){var cc=R.list[p],ss=C[cc.id];if(!ss)nNew++;else if(ss.r===0)nLearn++;else nRev++}
+  var h='<div class="rtop"><button class="back" id="b-home">‹ 返回</button><span class="title">今日复习</span><span class="counts tnum"><span class="n">新 '+nNew+'</span><span class="l">重学 '+nLearn+'</span><span class="r">复习 '+nRev+'</span></span></div>';
+  h+='<article class="slip k-'+c.k+'"><div class="face"><div class="kind"><span>'+K.name+' · '+esc(CH[f[0]])+'</span><span>'+(s?(s.r===0?'重学':'第 '+(s.r+1)+' 次复习'):'新卡')+'</span></div>';
+  if(c.k==='rf'){
+    h+='<div class="field"><span class="label">功用</span><div class="prompt small">'+esc(f[4])+'</div></div><div class="field"><span class="label">主治</span><div class="v">'+esc(f[5])+'</div></div><div class="ask">'+K.ask+'</div>';
+  }else{
+    h+='<div class="prompt">'+esc(f[1])+'</div><div class="ask">'+K.ask+'</div>';
+  }
+  if(R.shown){
+    h+='<div class="answer">';
+    if(c.k==='zc'){h+='<div class="field"><span class="label">组成'+(f[6]?'（红框为君药）':'')+'</span>'+herbsHtml(f)+'</div><div class="field"><span class="label">功用</span><div class="v">'+esc(f[4])+'</div></div>'}
+    else if(c.k==='gz'){h+='<div class="field"><span class="label">功用</span><div class="v big">'+esc(f[4])+'</div></div><div class="field"><span class="label">主治</span><div class="v">'+esc(f[5])+'</div></div>'}
+    else{h+='<div class="field"><span class="label">方名 · 出处</span><div class="v big">'+esc(f[1])+'　<span style="font-size:15px;color:var(--muted)">'+srcText(f[2])+'</span></div></div><div class="field"><span class="label">组成</span>'+herbsHtml(f)+'</div>'}
+    h+='</div>';
+  }
+  h+='</div></article>';
+  if(!R.shown)h+='<button class="flip" id="b-flip">看答案</button>';
+  else{
+    var labels=[['忘了','g1'],['模糊','g2'],['记得','g3'],['很熟','g4']];
+    h+='<div class="grades">';
+    for(var g=1;g<=4;g++)h+='<button class="grade '+labels[g-1][1]+'" data-g="'+g+'"><b>'+labels[g-1][0]+'</b><small class="tnum">'+ivlText(preview(c,g))+'</small></button>';
+    h+='</div><p class="label" style="letter-spacing:0;margin-top:10px">先在心里（或纸上）答一遍，再按实际情况评分。“忘了”的卡会在本轮稍后再出现。</p>';
+  }
+  app.innerHTML=h;
+  document.getElementById('b-home').onclick=function(){R=null;home()};
+  var fb=document.getElementById('b-flip');if(fb)fb.onclick=function(){R.shown=true;show()};
+  Array.prototype.forEach.call(document.querySelectorAll('.grade'),function(b){b.onclick=function(){grade(+b.getAttribute('data-g'))}});
+}
+function grade(g){
+  var c=R.list[R.pos],wasNew=!C[c.id];
+  C[c.id]=next(C[c.id],g);save(KEY,C);
+  if(wasNew){var t=today(),nn=newToday()+1;S.newLog={};S.newLog[t]=nn;save(SKEY,S)}
+  R.done++;
+  if(g===1){R.again++;var at=Math.min(R.list.length,R.pos+4);R.list.splice(at,0,c)}
+  R.pos++;R.shown=false;show();
+}
+function finish(){
+  var h='<div class="rtop"><button class="back" id="b-home">‹ 返回</button><span class="title">今日复习</span></div>';
+  h+='<div class="slip"><div class="done"><div class="label">今天完成</div><div class="big tnum">'+R.done+' 次</div><p style="color:var(--muted)">其中“忘了” '+R.again+' 次，这些卡明天会再出现。</p><button class="flip" id="b-back">回到首页</button></div></div>';
+  app.innerHTML=h;
+  document.getElementById('b-home').onclick=document.getElementById('b-back').onclick=function(){R=null;home()};
+}
+document.addEventListener('keydown',function(e){
+  if(!R||R.pos>=R.list.length)return;
+  if(!R.shown&&(e.key===' '||e.key==='Enter')){e.preventDefault();R.shown=true;show()}
+  else if(R.shown&&/^[1-4]$/.test(e.key))grade(+e.key);
+});
+home();
+try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')&&!/claude|anthropic/.test(location.hostname)){navigator.serviceWorker.register('sw.js').catch(function(){})}}catch(e){}
+})();
+</script>
+
+</body></html>
